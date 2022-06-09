@@ -12,6 +12,14 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+/*
+gerar chaves
+ssh-keygen -f ~/<name> -t rsa -m PKCS8 -b 2048
+
+export keys
+ssh-keygen -m PKCS8 -e
+*/
+
 var (
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
