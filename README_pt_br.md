@@ -148,3 +148,142 @@ Iremos receber a seguinte resposta.
 server ok
 ```
 ## 2. Routes
+
+Para criar uma rota é preciso utlizar a instância do fiber (app) e chamar qualquer função que tenha o nome de algum método HTTP (POST, PUT, GET, PATCH e DELETE).
+
+```go
+app := fiber.New()
+
+app.Get("/get", func(c *fiber.Ctx) error {
+	return c.SendString("GET route")
+})
+```
+
+Na função é preciso passar dois parâmetros. O primeiro é a rota desejada o segundo é uma função anônima, que recebe um contexto do fiber, que é onde fica a lógica da rota.
+
+Na rota é sempre preciso retonar um valor, se não, a requisição não ira ser finalizada.
+
+Exemplos das rotas:
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func main() {
+
+	app := fiber.New()
+
+	app.Get("/get", func(c *fiber.Ctx) error {
+		return c.SendString("GET route")
+	})
+
+	app.Post("/post", func(c *fiber.Ctx) error {
+		body := string(c.Body())
+		return c.SendString(body)
+	})
+
+	app.Put("/put", func(c *fiber.Ctx) error {
+		body := string(c.Body())
+		return c.SendString(body)
+	})
+
+	app.Patch("/patch", func(c *fiber.Ctx) error {
+		body := string(c.Body())
+		return c.SendString(body)
+	})
+
+	app.Delete("/delete", func(c *fiber.Ctx) error {
+		return c.SendString("DELETE route")
+	})
+
+	err := app.Listen(":3000")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	
+}
+```
+
+Exemplo de chamada:
+```cmd
+curl --location --request GET 'localhost:3000/get'
+```
+
+## 3. Groups
+
+É possível criar grupos de rotas. Com eles podemos personalizar e dividir melhor as chamadas das APIs.
+
+Para criar um grupo é preciso chamar a função *Group()* a partir da instância do fiber (app). Na função passamos como parâmetro o caminho inicial das rotas que irão pertencer ao grupo.
+
+```go
+app := fiber.New()
+
+// GROUP 1
+v1 := app.Group("/v1")
+```
+
+Com o grupo criado iremos criar as rotas associadas a ele. As rotas terão que ser criadas a partir da instância do grupo (que nesse caso seria *v1*). Para criar a rota basta chamar qualquer função que tenha como nome métodos HTTP.
+
+```go
+v1.Get("/group", func(c *fiber.Ctx) error {
+	return c.SendString("group 1")
+})
+```
+
+Criação de um segundo grupo:
+
+```go
+// GROUP 2
+v2 := app.Group("/v2")
+v2.Get("/group", func(c *fiber.Ctx) error {
+	return c.SendString("group 2")
+})
+```
+
+Exemplo dos grupos:
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func main() {
+
+	app := fiber.New()
+
+	// GROUP 1
+	v1 := app.Group("/v1")
+	v1.Get("/group", func(c *fiber.Ctx) error {
+		return c.SendString("group 1")
+	})
+
+	// GROUP 2
+	v2 := app.Group("/v2")
+	v2.Get("/group", func(c *fiber.Ctx) error {
+		return c.SendString("group 2")
+	})
+
+	err := app.Listen(":3000")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+}
+```
+
+Exemplos de chamadas:
+```cmd
+curl --location --request GET 'localhost:3000/v1/group'
+```
+
+```cmd
+curl --location --request GET 'localhost:3000/v2/group'
+```
