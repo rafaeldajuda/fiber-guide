@@ -287,3 +287,149 @@ curl --location --request GET 'localhost:3000/v1/group'
 ```cmd
 curl --location --request GET 'localhost:3000/v2/group'
 ```
+
+## 4. URL Parameters
+
+Existem várias formas de lidar com os parâmetros de rotas.
+
+A primeira seria uma rota sem parâmetro.
+
+```go
+// WITHOUT PARAMETER
+app.Get("/parameter", func(c *fiber.Ctx) error {
+	return c.SendString("route without parameter")
+})
+```
+
+A segunda seria uma rota com parâmetro. Nesse caso podemos capturar o valor do parâmetro ao utilizar a função *Params* passando o nome do parâmetro. Para nomear o parâmetro na rota precisamos passar um nome qualquer com um *:* (dois pontos) na frente. 
+
+```go
+// WITH PARAMETER
+app.Get("/parameter/:item", func(c *fiber.Ctx) error {
+	item := c.Params("item")
+	return c.SendString(item)
+})
+```
+
+Podemos também passar um parâmetro opcional na rota. Para isso precisamos utilizar um *?* (ponto de interrogação) no final do nome.
+
+```go
+// OPTIONAL PARAMETER
+app.Get("/optionalParameter/:item?", func(c *fiber.Ctx) error {
+	item := c.Params("item")
+	return c.SendString(item)
+})
+```
+
+Caso não queira passar nenhum nome específico, podemos utiliar o *\** (asterístico). Assim podemos capturar o valor sem especificar algum nome.
+
+```go
+// ANY ROUTE (greedy)
+app.Get("/anyParameter/*", func(c *fiber.Ctx) error {
+	item := c.Params("*")
+	return c.SendString(item)
+})
+```
+
+Podemos criar um parâmetro que recebe um valor na URL e capturar o valor dela por meio do nome do parâmetro.
+
+```go
+// OTHER
+app.Get("/parameterColor/color::color", func(c *fiber.Ctx) error {
+	item := c.Params("verde")
+	return c.SendString(item)
+})
+```
+
+Nesse caso ao chamar a URL *http://localhost:<port>/parameterColor/color:amarelo*, o valor do parâmetro *color* será "amarelo".
+
+Caso o parâmetro passado seja um número podemos capturar esse valor já como um inteiro utilizando a funçao *ParamsInt*.
+
+```go
+// OTHER
+app.Get("/int/:number", func(c *fiber.Ctx) error {
+	number, err := c.ParamsInt("number", 0)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return c.SendString(strconv.Itoa(number))
+})
+```
+
+Exemplo completo:
+
+```go
+package main
+
+import (
+	"log"
+	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func main() {
+
+	app := fiber.New()
+
+	// WITHOUT PARAMETER
+	app.Get("/parameter", func(c *fiber.Ctx) error {
+		return c.SendString("route without parameter")
+	})
+
+	// WITH PARAMETER
+	app.Get("/parameter/:item", func(c *fiber.Ctx) error {
+		item := c.Params("item")
+		return c.SendString(item)
+	})
+
+	// OPTIONAL PARAMETER
+	app.Get("/optionalParameter/:item?", func(c *fiber.Ctx) error {
+		item := c.Params("item")
+		return c.SendString(item)
+	})
+
+	// ANY ROUTE (greedy)
+	app.Get("/anyParameter/*", func(c *fiber.Ctx) error {
+		item := c.Params("*")
+		return c.SendString(item)
+	})
+
+	// OTHER
+	app.Get("/parameterColor/color::color", func(c *fiber.Ctx) error {
+		item := c.Params("color")
+		return c.SendString(item)
+	})
+
+	// OTHER
+	app.Get("/int/:number", func(c *fiber.Ctx) error {
+		number, err := c.ParamsInt("number", 0)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		return c.SendString(strconv.Itoa(number))
+	})
+
+	// START SERVER
+	err := app.Listen(":3000")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+}
+```
+
+Exemplos de algumas chamadas:
+
+```cmd
+curl --location --request GET 'localhost:3000/parameterColor/color:amarelo'
+```
+
+```cmd
+curl --location --request GET 'localhost:3000/parameter'
+```
+
+```cmd
+curl --location --request GET 'localhost:3000/parameter/teste'
+```

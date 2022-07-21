@@ -13,7 +13,6 @@ func main() {
 
 	// WITHOUT PARAMETER
 	app.Get("/parameter", func(c *fiber.Ctx) error {
-
 		return c.SendString("route without parameter")
 	})
 
