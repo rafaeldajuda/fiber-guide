@@ -433,3 +433,99 @@ curl --location --request GET 'localhost:3000/parameter'
 ```cmd
 curl --location --request GET 'localhost:3000/parameter/teste'
 ```
+
+## 5. Query String
+
+Para capturar as query strings das requisições utilizar a função *c.Query* passando o nome da query como parâmetro. Caso a query não exista será retornado uma string vazia.
+
+```go
+// QUERY STRING
+app.Get("/queryString", func(c *fiber.Ctx) error {
+	item := c.Query("item")
+	item2 := c.Query("item2")
+	return c.SendString(item + " - " + item2)
+})
+```
+
+É possível traformar querys strings em estruturas. Para isso primeiro é preciso criar uma estrura com os nomes das querys que irão ser passadas.
+
+```go
+// Field names should start with an uppercase letter
+type Person struct {
+	Name     string   `query:"name"`
+	Pass     string   `query:"pass"`
+	Products []string `query:"products"`
+}
+```
+
+Para transformar as querys em estruturas utilizar a função *c.QueryParser* passando como parâmetro uma váriavel do tipo da estrutura da query.
+
+```go
+p := new(Person)
+
+if err := c.QueryParser(p); err != nil {
+	return err
+}
+```
+
+Exemplo completo:
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+func main() {
+
+	// Field names should start with an uppercase letter
+	type Person struct {
+		Name     string   `query:"name"`
+		Pass     string   `query:"pass"`
+		Products []string `query:"products"`
+	}
+
+	app := fiber.New()
+
+	// QUERY STRING
+	app.Get("/queryString", func(c *fiber.Ctx) error {
+		item := c.Query("item")
+		item2 := c.Query("item2")
+		return c.SendString(item + " - " + item2)
+	})
+
+	// QUERY STRING TO STRUCT
+	app.Get("/queryToStruct", func(c *fiber.Ctx) error {
+		p := new(Person)
+
+		if err := c.QueryParser(p); err != nil {
+			return err
+		}
+
+		log.Println(p.Name)
+		log.Println(p.Pass)
+		log.Println(p.Products)
+
+		return c.Status(fiber.StatusOK).JSON(p)
+	})
+
+	err := app.Listen(":3000")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+}
+```
+
+Exemplos de chamadas:
+
+```curl
+curl --location --request GET 'http://localhost:3000/queryString?item=123&item2=456'
+```
+
+```curl
+curl --location --request GET 'http://localhost:3000/queryToStruct?name=Rafael&pass=123&products=banana,boots'
+```
